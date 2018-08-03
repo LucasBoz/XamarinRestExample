@@ -10,7 +10,7 @@ namespace xamarinrest.Services
 {
     class RestService
     {
-        private static readonly string Url = "http://192.168.20.195:8080/";
+        private static readonly string Url = "http://192.168.20.16:8080/";
         private static readonly HttpClient _client = new HttpClient();
 
         public static void Init()
@@ -22,11 +22,18 @@ namespace xamarinrest.Services
                 UpdateUri = "pessoa/update",
                 DeleteUri = "pessoa/delete/" //concat ID
             };
+            var empresaHolder = new RestHolder<Empresa> {
+                SyncUri = "empresa/merge?date=",
+                InsertUri = "empresa/insert",
+                UpdateUri = "empresa/update",
+                DeleteUri = "empresa/delete/" //concat ID
+            };
 
             //...
 
             //Cria um timer que executa uma chamada para "SyncUri" automáticamente a cada X periodos
             RestHolder<Pessoa>.StartAutoSync<Pessoa>();
+            RestHolder<Empresa>.StartAutoSync<Empresa>();
             
             //...
         }

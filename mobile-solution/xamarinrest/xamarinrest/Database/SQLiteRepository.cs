@@ -13,27 +13,30 @@ namespace xamarinrest.Database
         private static readonly string dbPath = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.Personal ), "appdatabase.db" );
         private static readonly SQLiteConnection db = new SQLiteConnection( dbPath );
         
-
         public static void Init()
         {
             Console.WriteLine("Creating database, if it doesn't already exist");
             db.CreateTable<Pessoa>();
+            db.CreateTable<Empresa>();
         }
         
         //Método para dar merge na list de entidades
         public static async void Sync<T>( List<T> entityList ) where T : new()
         {
+            var rowsAffectedAll = 0;
             foreach ( T entity in entityList )
             {
                 var rowsAffected = db.Update(entity);
                 if (rowsAffected == 0) rowsAffected = db.Insert(entity);
+
+                rowsAffectedAll += rowsAffected;
             }
 
             if( entityList.Count > 0 )
             {
                 foreach (Subscription<T> subscription in Subscription<T>.subscriptionDictionary.Values)
                 {
-                    subscription.Callback();
+                    subscription.Callback.Invoke();
                 }
             }
         }

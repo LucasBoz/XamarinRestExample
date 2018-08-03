@@ -11,7 +11,7 @@ namespace xamarinrest.Services.Rest
 {
     class RestHolder<T>
     {
-        private static readonly TimeSpan refreshTimeSpan = new TimeSpan( 0, 0, 15 );
+        private static readonly TimeSpan refreshTimeSpan = new TimeSpan( 0, 0, 30 );
 
         //self instance singleton para RestEntityHolder, que auxilia a mexer com as Uri's REST
         public static RestHolder<T> instance = null;
@@ -25,6 +25,8 @@ namespace xamarinrest.Services.Rest
         {
             instance = instance ?? this;
         }
+
+        public bool LockThread { get; set; }
 
         public string InsertUri
         {
@@ -54,6 +56,7 @@ namespace xamarinrest.Services.Rest
         {
             RunTask<T>();
 
+            var holder = RestHolder<T>.instance;
             Device.StartTimer( refreshTimeSpan, () => {
                 RunTask<T>();
                 return true; //restart timer
@@ -62,22 +65,38 @@ namespace xamarinrest.Services.Rest
 
         private static async void RunTask<T>() where T : new()
         {
+            var holder = RestHolder<T>.instance;
+            if (holder.LockThread) return;
+            holder.LockThread = true;
+
             try
             {
                 //Pega o DateTime da ultima requisição desta Uri
-                DateTime lastRequest = Prefs.getDateTime(RestHolder<T>.instance.SyncUri);
+                DateTime lastRequest = Prefs.getDateTime(holder.SyncUri);
 
                 //Request e Sync
                 long unixTimestamp = lastRequest.Ticks - new DateTime(1970, 1, 1).Ticks;
-                string content2 = await RestService.GetAsync(RestHolder<T>.instance.SyncUri + ( unixTimestamp / TimeSpan.TicksPerMillisecond ) );
-                List<T> list2 = JsonConvert.DeserializeObject<List<T>>(content2);
+
+                Console.WriteLine("-------- Init REST");
+                string content = await RestService.GetAsync(holder.SyncUri + ( unixTimestamp / TimeSpan.TicksPerMillisecond ) );
+                Console.WriteLine("-------- END REST seconds(" + ( unixTimestamp / TimeSpan.TicksPerSecond ) + ")");
+
+                Console.WriteLine("-------- Init Deserialize ");
+                List<T> list2 = JsonConvert.DeserializeObject<List<T>>(content);
+                Console.WriteLine("-------- END Deserialize seconds(" + (unixTimestamp / TimeSpan.TicksPerSecond) + ")");
+
+                Console.WriteLine("-------- Init Sync");
                 SQLiteRepository.Sync<T>(list2);
+                Console.WriteLine("-------- END SYNC seconds(" + (unixTimestamp / TimeSpan.TicksPerSecond) + ")");
+
 
                 //Seta o DateTime da ultima requisição para AGORA
-                Prefs.setDateTime(RestHolder<T>.instance.SyncUri, DateTime.Now);
+                Prefs.setDateTime(holder.SyncUri, DateTime.Now);
+                holder.LockThread = false;
             }
             catch( Exception e )
             {
+                holder.LockThread = false;
                 Console.WriteLine( e.Message );
             }
         }
