@@ -1,0 +1,9 @@
+web-solution/target/
+.DS_Store
+.node
+.idea
+*.iml
+.factorypath
+.springBeans
+.project
+.settings
