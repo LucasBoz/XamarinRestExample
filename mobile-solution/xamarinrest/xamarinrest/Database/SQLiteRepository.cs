@@ -21,17 +21,27 @@ namespace xamarinrest.Database
         }
         
         //Método para dar merge na list de entidades
-        public static async void Sync<T>( List<T> entityList ) where T : new()
+        public static async void SyncEntities<T>( List<T> entityList ) where T : new()
         {
             //Insere todas as entidades async passadas por parametro
             var rowsAffectedAll = 0;
+
             foreach (T entity in entityList)
             {
-                var rowsAffected = await Task.FromResult(db.Update(entity));
-                if (rowsAffected == 0) rowsAffected = await Task.FromResult(db.Insert(entity));
+                var rowsAffected = 0;
+                try //Quando a requisição tenta inserir uma entidade deletada ocorre um erro de constraint
+                {
+                    rowsAffected = await Task.FromResult(db.Update(entity));
+                    if (rowsAffected == 0) rowsAffected = await Task.FromResult(db.Insert(entity));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
                 rowsAffectedAll += rowsAffected;
             }
+            
 
             if ( rowsAffectedAll > 0 )
             {
@@ -43,11 +53,20 @@ namespace xamarinrest.Database
         }
 
         //Apaga do cache. Remove do cache local as entidades que foram deletadas na nuvem
-        public static void SyncDeletedEntities<T>( List<T> entityList ) where T : new()
+        public static async void SyncDeletedEntities<T>( List<long> deletedIds ) where T : new()
         {
-            foreach ( T entity in entityList )
+            var rowsAffected = 0;
+            foreach ( long entityId in deletedIds )
             {
-                db.Delete<T>( entity );
+                rowsAffected += await Task.FromResult( db.Delete<T>( entityId ) );
+            }
+
+            if (rowsAffected > 0)
+            {
+                foreach (Subscription<T> subscription in Subscription<T>.subscriptionDictionary.Values)
+                {
+                    subscription.Callback.Invoke();
+                }
             }
         }
 

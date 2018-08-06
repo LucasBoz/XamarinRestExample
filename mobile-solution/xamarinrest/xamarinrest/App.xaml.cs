@@ -4,6 +4,7 @@ using xamarinrest.Views;
 using Xamarin.Forms.Xaml;
 using xamarinrest.Database;
 using xamarinrest.Services;
+using xamarinrest.Services.Rest;
 
 [assembly: XamlCompilation (XamlCompilationOptions.Compile)]
 namespace xamarinrest
@@ -24,6 +25,7 @@ namespace xamarinrest
             // Handle when your app starts
             SQLiteRepository.Init();
             RestService.Init();
+            SyncService.Init();
 		}
 
 		protected override void OnSleep ()

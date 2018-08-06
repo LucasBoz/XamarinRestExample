@@ -12,12 +12,12 @@ namespace xamarinrest.Services.Rest
 {
     class RestHolder<T>
     {
-        private static readonly TimeSpan refreshTimeSpan = new TimeSpan( 0, 0, 5 );
-
         //self instance singleton para RestEntityHolder, que auxilia a mexer com as Uri's REST
         public static RestHolder<T> instance = null;
 
         private string _syncUri;
+        private string _syncDeletedUri;
+        
         private string _insertUri;
         private string _updateUri;
         private string _deleteUri;
@@ -27,7 +27,8 @@ namespace xamarinrest.Services.Rest
             instance = instance ?? this;
         }
 
-        public bool LockThread { get; set; }
+        public bool LockSyncThread { get; set; }
+        public bool LockSyncDeletedThread { get; set; }
 
         public string InsertUri
         {
@@ -49,69 +50,14 @@ namespace xamarinrest.Services.Rest
 
         public string SyncUri
         {
-            get => _syncUri ?? typeof(T).Name.ToLower() + "/" + "list";
+            get => _syncUri ?? typeof(T).Name.ToLower() + "/" + "merge";
             set => _syncUri = value;
         }
 
-        //Faz com que seja chamado o REST no endereço de SYNC a cada X segundos
-        public static void StartAutoSync<T>() where T : new()
+        public string SyncDeletedUri
         {
-            Task.Run(() => {
-                requestRestAndSync<T>();
-            });
-
-            var holder = RestHolder<T>.instance;
-            Device.StartTimer( refreshTimeSpan, () => {
-
-                Task.Run(() => {
-                    requestRestAndSync<T>();
-                });
-
-                return true; //restart timer
-            });
-        }
-
-        //Requisita o endereço REST para Sincronizar a classe específica no banco SQLite local
-        private static async void requestRestAndSync<T>() where T : new()
-        {
-            var holder = RestHolder<T>.instance;
-            if (holder.LockThread)  return;
-            holder.LockThread = true;
-
-            try
-            {
-                //Pega o DateTime da ultima requisição desta Uri
-                DateTime lastRequest = Prefs.getDateTime(holder.SyncUri);
-
-                //Request e Sync
-                long unixTimestamp = lastRequest.Ticks - new DateTime(1970, 1, 1).Ticks;
-
-                Stopwatch stopwatch = new Stopwatch();
-                StringBuilder log = new StringBuilder();
-
-                stopwatch.Start();
-                string content = await RestService.GetAsync(holder.SyncUri + (unixTimestamp / TimeSpan.TicksPerMillisecond));
-                log = log.AppendFormat( "\n-------- REST REQUEST TIME <{1}> {0} ------- ", stopwatch.Elapsed, typeof(T).Name );
-
-                stopwatch.Restart();
-                List<T> list2 = JsonConvert.DeserializeObject<List<T>>(content);
-                log = log.AppendFormat("\n-------- Deserialize TIME <{1}> {0} ------- ", stopwatch.Elapsed, typeof(T).Name );
-
-                stopwatch.Restart();
-                SQLiteRepository.Sync<T>(list2);
-                log = log.AppendFormat("\n-------- SYNC TIME <{1}> {0} -------", stopwatch.Elapsed, typeof(T).Name );
-
-                //Seta o DateTime da ultima requisição para AGORA
-                Prefs.setDateTime(holder.SyncUri, DateTime.Now);
-                holder.LockThread = false;
-
-                Debug.WriteLine(log);
-            }
-            catch ( Exception e )
-            {
-                holder.LockThread = false;
-                Console.WriteLine(e.Message);
-            }
+            get => _syncDeletedUri ?? typeof(T).Name.ToLower() + "/" + "mergeDeleted";
+            set => _syncDeletedUri = value;
         }
     }
 }

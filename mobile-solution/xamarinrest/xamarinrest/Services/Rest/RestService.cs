@@ -18,24 +18,17 @@ namespace xamarinrest.Services
             //Obrigatório; Cria a configuração de REST para a entidade T especificada em <T>
             var pessoaHolder = new RestHolder<Pessoa> {
                 SyncUri = "pessoa/merge?date=",
+                SyncDeletedUri = "pessoa/mergeDeleted?date=",
                 InsertUri = "pessoa/insert",
                 UpdateUri = "pessoa/update",
-                DeleteUri = "pessoa/delete/" //concat ID
+                DeleteUri = "pessoa/delete/{0}"
             };
             var empresaHolder = new RestHolder<Empresa> {
                 SyncUri = "empresa/merge?date=",
                 InsertUri = "empresa/insert",
                 UpdateUri = "empresa/update",
-                DeleteUri = "empresa/delete/" //concat ID
+                DeleteUri = "empresa/delete/{0}"
             };
-
-            //...
-
-            //Cria um timer que executa uma chamada para "SyncUri" automáticamente a cada X periodos
-            RestHolder<Pessoa>.StartAutoSync<Pessoa>();
-            RestHolder<Empresa>.StartAutoSync<Empresa>();
-            
-            //...
         }
 
         //generic method to send entity with rest HTTP PUT/POST
@@ -59,7 +52,9 @@ namespace xamarinrest.Services
         public static async void Delete<T>( long id ) where T : new()
         {
             var holder = RestHolder<T>.instance;
-            await _client.DeleteAsync( Url + holder.DeleteUri + id );
+            StringBuilder fullUri = new StringBuilder();
+            fullUri = fullUri.AppendFormat(Url + holder.DeleteUri, id);
+            await _client.DeleteAsync( fullUri.ToString() );
         }
 
         //generic method to rest HTTP GET
