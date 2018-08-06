@@ -23,16 +23,17 @@ namespace xamarinrest.Database
         //Método para dar merge na list de entidades
         public static async void Sync<T>( List<T> entityList ) where T : new()
         {
+            //Insere todas as entidades async passadas por parametro
             var rowsAffectedAll = 0;
-            foreach ( T entity in entityList )
+            foreach (T entity in entityList)
             {
-                var rowsAffected = db.Update(entity);
-                if (rowsAffected == 0) rowsAffected = db.Insert(entity);
+                var rowsAffected = await Task.FromResult(db.Update(entity));
+                if (rowsAffected == 0) rowsAffected = await Task.FromResult(db.Insert(entity));
 
                 rowsAffectedAll += rowsAffected;
             }
 
-            if( entityList.Count > 0 )
+            if ( rowsAffectedAll > 0 )
             {
                 foreach (Subscription<T> subscription in Subscription<T>.subscriptionDictionary.Values)
                 {

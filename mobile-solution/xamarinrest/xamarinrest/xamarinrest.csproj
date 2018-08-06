@@ -13,8 +13,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\PessoasPage.xaml.cs">
+      <DependentUpon>PessoasPage.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Update="Views\EmpresasPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 </Project>
