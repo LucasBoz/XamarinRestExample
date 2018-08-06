@@ -2,25 +2,64 @@ package br.com.eits.boot.domain.entity;
 
 import javax.persistence.Entity;
 
-import org.directwebremoting.annotations.DataTransferObject;
+import org.hibernate.envers.Audited;
 
 import br.com.eits.common.domain.entity.AbstractEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+/**
+ * 
+ * @author eits
+ *
+ */
 @Data
 @Entity
-@DataTransferObject( javascript="Pessoa" )
-@ToString(callSuper=true)
-public class Pessoa extends AbstractEntity {
+@Audited
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper=true)
+public class Pessoa extends AbstractEntity 
+{
 	
-	String nome;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2805031793508895333L;
+
 	
+	/*-------------------------------------------------------------------
+	 *				 		     ATTRIBUTES
+	 *-------------------------------------------------------------------*/
+
+	/**
+	 * 
+	 */
+	private String nome;
+	
+	
+	/*-------------------------------------------------------------------
+	 * 		 					CONSTRUCTORS
+	 *-------------------------------------------------------------------*/
+	
+	/**
+	 * 
+	 */
 	public Pessoa(){ super(); }
+	
+	/**
+	 * 
+	 * @param id
+	 * @param nome
+	 */
 	public Pessoa( Long id, String nome )
 	{
 		this.id = id;
 		this.nome = nome;
 	}
+	
+	/*-------------------------------------------------------------------
+	 *							BEHAVIORS
+	 *-------------------------------------------------------------------*/
 	
 }

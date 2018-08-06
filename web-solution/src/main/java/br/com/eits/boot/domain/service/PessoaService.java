@@ -4,8 +4,6 @@ import java.math.BigInteger;
 import java.util.Calendar;
 import java.util.List;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.directwebremoting.annotations.RemoteProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,39 +17,91 @@ import br.com.eits.boot.domain.repository.IPessoaRepository;
 @Transactional
 public class PessoaService {
 
+	/*-------------------------------------------------------------------
+	 * 		 					ATTRIBUTES
+	 *-------------------------------------------------------------------*/
+
+	//Repositories
+	/**
+	 * 
+	 */
 	@Autowired
 	private IPessoaRepository pessoaRepository;
 
-	public List<Pessoa> merge(String dateString) {
 	
-		Long dateInteger = Long.parseLong(dateString);
+	/*-------------------------------------------------------------------
+	 * 		 					SERVICES
+	 *-------------------------------------------------------------------*/
+	
+	/**
+	 * 
+	 * @param dateString
+	 * @return
+	 */
+	public List<Pessoa> listChangesByDate(final String dateString) 
+	{
+	
+		final Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( Long.parseLong(dateString) );
 
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTimeInMillis(dateInteger);
+		final List<Pessoa> pessoaList = pessoaRepository.listChangesByDate(calendar);
+		
+		System.out.println( pessoaList.size() );
+		
+		return pessoaList;
+	}
+	
+	/**
+	 * 
+	 * @param dateString
+	 * @return 
+	 */
+	public List<BigInteger> listRemovedByTimestemp(final String dateString) 
+	{
+		final Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( Long.parseLong(dateString) );
 
-		System.out.println(calendar.getTime());
-		List<Pessoa> me = pessoaRepository.findPessoaPENSAR_NOME_MELHOR(calendar);
-		
-		System.out.println( me.size() );
-		
-		return me;
+		return pessoaRepository.listRemovedByTimestemp( calendar.getTimeInMillis());
+
 	}
 
-	public List<BigInteger> listRemovedByTimestemp( Long milliseconds ){
-		
-		
-		return this.pessoaRepository.listRemovedByTimestemp( 1530800846978L );
-		
-
+	/**
+	 * 
+	 * @param milliseconds
+	 * @return
+	 */
+	public List<BigInteger> listRemovedByMilliseconds( Long milliseconds )
+	{
+		return this.pessoaRepository.listRemovedByTimestemp( milliseconds );
 	}
 
-	public Pessoa insert(Pessoa pessoa) {
-		System.out.println(pessoa);
+	/**
+	 * 
+	 * @param pessoa
+	 * @return
+	 */
+	public Pessoa insert(final Pessoa pessoa) 
+	{
 		return pessoaRepository.save(pessoa);
 	}
 
-	public Pessoa update(Pessoa pessoa) {
+	/**
+	 * 
+	 * @param pessoa
+	 * @return
+	 */
+	public Pessoa update(Pessoa pessoa) 
+	{
 		return pessoaRepository.save(pessoa);
+	}
+	
+	/**
+	 * 
+	 * @param pessoaId
+	 */
+	public void remove(long pessoaId) 
+	{
+		pessoaRepository.deleteById( pessoaId );
 	}
 
 }

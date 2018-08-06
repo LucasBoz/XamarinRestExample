@@ -12,28 +12,39 @@ import br.com.eits.boot.domain.entity.Pessoa;
 
 /**
  * 
- * @author boz
+ * @author eits
  *
  */
-public interface IPessoaRepository  extends JpaRepository<Pessoa, Long>{
+public interface IPessoaRepository  extends JpaRepository<Pessoa, Long>
+{
 
-	
+	/**
+	 * Utilizado na sincronização de dados atualizados
+	 * 
+	 * @param date
+	 * @return Lista de {@link Pessoa} que possui alteração após a data do parametro
+	 */
 	@Query("FROM Pessoa pessoa " 
 			+ " WHERE "
 			+ "  pessoa.created >= CAST (:date as date)  "
 			+ " OR pessoa.updated >= CAST ( :date as date)"
 			+ " OR '%'||:date||'%' = null "
 			)
-	List<Pessoa> findPessoaPENSAR_NOME_MELHOR( @Param("date") Calendar date);
+	List<Pessoa> listChangesByDate( @Param("date") Calendar date);
 	
-	
+	/**
+	 * Utilizado na sincronização de dados removidos
+	 *  revision_type = 2 -> removed
+	 * @param milliseconds
+	 * @return Lista de IDs de todos os registros excluidos após a data do parametro
+	 */
 	@Query( nativeQuery = true,
 			value = " select a.id " + 
-					" from auditing.revision r, auditing.user_audited a" + 
+					" from auditing.revision r, auditing.pessoa_audited a" + 
 					" where" + 
 					" a.revision = r.id " + 
 					" and r.timestamp >= :milliseconds " + 
-					" and a.revision_type = 1 " )
+					" and a.revision_type = 2 " )
 	List<BigInteger> listRemovedByTimestemp( @Param("milliseconds") long milliseconds );
 	
 }

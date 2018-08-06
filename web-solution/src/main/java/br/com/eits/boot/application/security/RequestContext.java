@@ -23,6 +23,6 @@ public abstract class RequestContext
 	public static Optional<User> currentUser()
 	{
 		return Optional.ofNullable( SecurityContextHolder.getContext().getAuthentication() )
-				.map( auth -> (User) auth.getPrincipal() );
+				.map( auth -> auth.getPrincipal() instanceof User ? (User) auth.getPrincipal() : null );
 	}
 }
