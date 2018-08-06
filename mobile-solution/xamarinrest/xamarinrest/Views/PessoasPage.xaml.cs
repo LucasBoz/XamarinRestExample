@@ -1,34 +1,29 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
-using xamarinrest.Database;
+
 using xamarinrest.Models;
+using xamarinrest.Database;
 
 namespace xamarinrest.Views
 {
-    [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class EmpresasPage : ContentPage
-    {
-        private Subscription<Empresa> listEmpresasSubscription;
+	[XamlCompilation(XamlCompilationOptions.Compile)]
+	public partial class PessoasPage : ContentPage
+	{
+        private Subscription<Pessoa> listPessoaSubscription;
 
-        public EmpresasPage()
+        public PessoasPage()
         {
             InitializeComponent();
 
             //Cria um callback (Watcher, Observable) que será executado após um Sync de success (automático)
-            listEmpresasSubscription = new Subscription<Empresa>(() => {
+            listPessoaSubscription = new Subscription<Pessoa>( () => {
                 Device.BeginInvokeOnMainThread( async () => {
-                    MyListView.ItemsSource = await SQLiteRepository.Query<Empresa>("SELECT * FROM " + typeof(Empresa).Name);
+                    MyListView.ItemsSource = await SQLiteRepository.Query<Pessoa>("SELECT * FROM " + typeof(Pessoa).Name);
                 });
             });
 
             //Chama o callback criado acima (para listar e não precisar esperar que o App faça uma requisição)
-            listEmpresasSubscription.Callback.Invoke();
+            listPessoaSubscription.Callback.Invoke();
         }
 
         async void Handle_ItemTapped(object sender, ItemTappedEventArgs e)
