@@ -62,8 +62,8 @@ var empresaHolder = new RestHolder<Empresa> {
 ### Configuring SyncService
 Define Sync features that can sync data periodically at `SyncService.cs` Init method.
 
-*AutoSync
-*AutoSyncDeleted
+* AutoSync
+* AutoSyncDeleted
 
 ```
 public static void Init()
@@ -75,11 +75,38 @@ public static void Init()
 }
 ```
 
+Both `StartAutoSync` and `StartAutoSync` have it's own TimeSpan to periodically sync data at `SyncService.cs` static attribute.
+Default value is set to try a sync each 5 seconds and must be changed hardcoded by now
+
+```
+private static readonly TimeSpan syncTimeSpan = new TimeSpan(0, 0, 5);
+private static readonly TimeSpan syncDeleteTimeSpan = new TimeSpan(0, 0, 5);
+```
+
 `StartAutoSync creates a timer that execute a rest call to SyncUri and autoSync in background`
 
 `StartAutoSyncDeleted creates a timer that execute a rest call to SyncDeletedUri and autoSync deleted entities in background`
 
 ### Watcher functionality (Subscribe)
-It is possible to create a watcher, that will execute a block of code by subscribing
+It is possible to create a watcher, that will execute a block of code whenever a Sync or SyncDeleted of <T> class happens
+  
+```
+// ...
+
+subscription = new Subscription<Pessoa>( () => {
+    Device.BeginInvokeOnMainThread( async () => {
+        MyListView.ItemsSource = await SQLiteRepository.Query<Pessoa>("SELECT * FROM " + typeof(Pessoa).Name);
+    });
+});
+  
+// ...
+```
+
+The lambda block of code above is called whenever a Sync or SyncDeleted of `Pessoa.cs` is completed by `SyncService.cs` auto sync method.
+This example execute a query to refresh the `MyListView.ItemSource` after a sync ends.
+`Device.BeginInvokeOnMainThread` must be used in this case, because MyListView has to be executed on MainThread
+
+#### Unsubscribe watcher
+To unsubscribe a watcher, just call Unsubscribe method at object instance <Subscription>
 
 
